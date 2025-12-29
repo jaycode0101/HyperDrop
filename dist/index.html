@@ -1,17 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/hyperdrop.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#6366F1" />
-    <meta name="description" content="HyperDrop - Share files at lightning speed, completely offline. Peer-to-peer file transfer." />
-    <meta name="keywords" content="file transfer, p2p, offline, airdrop alternative, fast file sharing" />
-    <title>HyperDrop - Lightning Fast File Sharing</title>
-    <script type="module" crossorigin src="/assets/index-CpS9dKzE.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-C6h5YVq1.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/hyperdrop.svg" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#6366F1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="description"
+    content="HyperDrop - Share files at lightning speed, completely offline. Peer-to-peer file transfer." />
+  <meta name="keywords" content="file transfer, p2p, offline, airdrop alternative, fast file sharing" />
+  <title>HyperDrop - Lightning Fast File Sharing</title>
+  <script type="module" crossorigin src="/assets/index-Cv7Fw5I_.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-qqfeTyA1.css">
+</head>
+
+<body>
+  <div id="root"></div>
+  <script>
+    // Register service worker for PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('SW registered:', reg.scope))
+          .catch(err => console.log('SW registration failed:', err));
+      });
+    }
+  </script>
+</body>
+
 </html>

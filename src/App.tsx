@@ -7,7 +7,8 @@ import {
     Check,
     Link,
     Plus,
-    X
+    X,
+    Clock
 } from 'lucide-react';
 import { useDeviceName } from './hooks/useDeviceName';
 import { useTransfer } from './hooks/useTransfer';
@@ -18,12 +19,14 @@ import { ReceivedFilesList } from './components/ReceivedFilesList';
 import { LoadingSpinner, SuccessCheck, PulsingDot } from './components/LoadingSpinner';
 import { EncryptionBanner } from './components/EncryptionBanner';
 import { SessionStats } from './components/SessionStats';
+import { HistoryTab } from './components/HistoryTab';
+import { initStorage, storeFile } from './utils/storage';
 import type { TabType, FileInfo, ReceivedFile, FileMetadata } from './types';
 
 const RECEIVED_FILES_KEY = 'hyperdrop_received_files';
 
 function App() {
-    const { deviceName, isLoading, isSetupComplete } = useDeviceName();
+    const { deviceName, deviceId, isLoading, isSetupComplete } = useDeviceName();
     const [showSetup, setShowSetup] = useState(false);
     const [activeTab, setActiveTab] = useState<TabType>('send');
     const [selectedFiles, setSelectedFiles] = useState<FileInfo[]>([]);
@@ -31,6 +34,7 @@ function App() {
     const [transferMode, setTransferMode] = useState<'idle' | 'sending' | 'receiving'>('idle');
     const [peerIdInput, setPeerIdInput] = useState('');
     const [copied, setCopied] = useState(false);
+    const [storageReady, setStorageReady] = useState(false);
 
     // Session stats
     const [sessionStats, setSessionStats] = useState({
@@ -39,6 +43,15 @@ function App() {
         filesSent: 0,
         filesReceived: 0,
     });
+
+    // Initialize encrypted storage
+    useEffect(() => {
+        if (deviceId) {
+            initStorage(deviceId)
+                .then(() => setStorageReady(true))
+                .catch(e => console.error('Storage init failed:', e));
+        }
+    }, [deviceId]);
 
     useEffect(() => {
         try {
@@ -64,20 +77,32 @@ function App() {
         localStorage.setItem(RECEIVED_FILES_KEY, JSON.stringify(toSave));
     }, [receivedFiles]);
 
-    const handleFileReceived = useCallback((blob: Blob, metadata: FileMetadata) => {
-        console.log('File received:', metadata.name);
+    const handleFileReceived = useCallback((blob: Blob, metadata: FileMetadata, senderDeviceName: string) => {
+        console.log('File received:', metadata.name, 'from', senderDeviceName);
+        const fileId = metadata.id + '-' + Date.now();
         const newFile: ReceivedFile = {
-            id: metadata.id + '-' + Date.now(),
+            id: fileId,
             name: metadata.name,
             size: metadata.size,
             type: metadata.type,
             blob,
             receivedAt: new Date(),
-            senderName: 'Sender',
+            senderName: senderDeviceName || 'Unknown Device',
             transferSpeed: 0,
             transferTime: 0,
         };
         setReceivedFiles(prev => [newFile, ...prev]);
+
+        // Store encrypted in IndexedDB
+        if (storageReady) {
+            storeFile(blob, {
+                id: fileId,
+                name: metadata.name,
+                peerId: peerIdInput || 'unknown',
+                peerName: senderDeviceName || 'Unknown Device',
+                direction: 'received',
+            }).catch(e => console.error('Failed to store file:', e));
+        }
 
         // Update session stats
         setSessionStats(prev => ({
@@ -85,7 +110,7 @@ function App() {
             bytesReceived: prev.bytesReceived + metadata.size,
             filesReceived: prev.filesReceived + 1,
         }));
-    }, []);
+    }, [storageReady, peerIdInput]);
 
     const transfer = useTransfer({
         onFileReceived: handleFileReceived,
@@ -250,7 +275,6 @@ function App() {
 
             {/* Tabs */}
             <div className="tabs" style={{ marginBottom: 'var(--space-lg)' }}>
-                <div className={`tab-indicator ${activeTab === 'receive' ? 'receive' : ''}`} style={{ left: 'var(--space-xs)' }} />
                 <button
                     className={`tab ${activeTab === 'send' ? 'active' : ''}`}
                     onClick={() => { setActiveTab('send'); handleNewTransfer(); }}
@@ -262,6 +286,12 @@ function App() {
                     onClick={() => { setActiveTab('receive'); handleNewTransfer(); }}
                 >
                     <Download size={18} /> Receive
+                </button>
+                <button
+                    className={`tab ${activeTab === 'history' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('history')}
+                >
+                    <Clock size={18} /> History
                 </button>
             </div>
 
@@ -466,6 +496,10 @@ function App() {
                             />
                         )}
                     </div>
+                )}
+
+                {activeTab === 'history' && (
+                    <HistoryTab />
                 )}
             </main>
 

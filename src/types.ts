@@ -40,7 +40,7 @@ export interface ConnectionInfo {
     encryptionKey?: string;
 }
 
-export type TabType = 'send' | 'receive';
+export type TabType = 'send' | 'receive' | 'history';
 
 export interface PeerMessage {
     type: 'file-info' | 'chunk' | 'done' | 'error' | 'ack';

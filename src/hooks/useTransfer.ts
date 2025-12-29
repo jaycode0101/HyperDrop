@@ -9,7 +9,7 @@ const CHUNK_SIZE = 256 * 1024;
 const SPEED_SAMPLES = 5;
 
 interface UseTransferOptions {
-    onFileReceived?: (file: Blob, metadata: FileMetadata) => void;
+    onFileReceived?: (file: Blob, metadata: FileMetadata, peerName: string) => void;
     onError?: (error: string) => void;
 }
 
@@ -43,10 +43,11 @@ export function useTransfer(options: UseTransferOptions = {}) {
 
     const peerRef = useRef<Peer | null>(null);
     const connectionRef = useRef<DataConnection | null>(null);
-    const chunksRef = useRef<ArrayBuffer[]>([]);
+    const chunksRef = useRef<Uint8Array[]>([]);
     const metadataRef = useRef<FileMetadata | null>(null);
     const startTimeRef = useRef<number>(0);
     const deviceNameRef = useRef<string>('');
+    const peerNameRef = useRef<string>('');
     const onFileReceivedRef = useRef(options.onFileReceived);
 
     // Speed calculation refs
@@ -118,11 +119,34 @@ export function useTransfer(options: UseTransferOptions = {}) {
 
     // Handle incoming data - BINARY for speed
     const handleIncomingData = useCallback((data: unknown) => {
-        // Binary chunk data
+        // Binary chunk data - handle both ArrayBuffer and Uint8Array
+        // CRITICAL: We must COPY the data, not just slice/view it!
+        // PeerJS may reuse internal buffers, corrupting our data if we don't copy.
+        let buffer: ArrayBuffer | null = null;
+
         if (data instanceof ArrayBuffer) {
-            const view = new DataView(data);
+            // Copy the ArrayBuffer to avoid reference issues
+            buffer = data.slice(0);
+        } else if (data instanceof Uint8Array) {
+            // Create a new ArrayBuffer with a proper copy of the data
+            const copy = new Uint8Array(data.length);
+            copy.set(data);
+            buffer = copy.buffer;
+        } else if (ArrayBuffer.isView(data)) {
+            // For any other typed array view, copy properly
+            const view = data as ArrayBufferView;
+            const copy = new Uint8Array(view.byteLength);
+            copy.set(new Uint8Array(view.buffer, view.byteOffset, view.byteLength));
+            buffer = copy.buffer;
+        }
+
+        if (buffer) {
+            const view = new DataView(buffer);
             const chunkIndex = view.getUint32(0, true); // Little endian
-            const chunkData = data.slice(4);
+            // IMPORTANT: Create a proper copy of chunk data
+            const chunkDataView = new Uint8Array(buffer, 4);
+            const chunkData = new Uint8Array(chunkDataView.length);
+            chunkData.set(chunkDataView);
 
             chunksRef.current[chunkIndex] = chunkData;
 
@@ -151,6 +175,7 @@ export function useTransfer(options: UseTransferOptions = {}) {
 
                 if (msg.type === 'device-name') {
                     setPeerName(msg.name);
+                    peerNameRef.current = msg.name;
                 } else if (msg.type === 'total-files') {
                     setTotalFiles(msg.count);
                     setFilesCompleted(0);
@@ -172,12 +197,14 @@ export function useTransfer(options: UseTransferOptions = {}) {
                     });
                 } else if (msg.type === 'file-complete') {
                     const metadata = metadataRef.current!;
-                    const blob = new Blob(chunksRef.current, { type: metadata.type });
+                    // Filter out any undefined chunks and create blob from valid data
+                    const validChunks = chunksRef.current.filter((chunk): chunk is Uint8Array => chunk !== undefined);
+                    const blob = new Blob(validChunks as BlobPart[], { type: metadata.type });
 
                     const totalTime = (Date.now() - startTimeRef.current) / 1000;
                     const avgSpeed = metadata.size / totalTime;
 
-                    onFileReceivedRef.current?.(blob, metadata);
+                    onFileReceivedRef.current?.(blob, metadata, peerNameRef.current || 'Unknown Device');
                     setFilesCompleted(prev => prev + 1);
 
                     chunksRef.current = [];
