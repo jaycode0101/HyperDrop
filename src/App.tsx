@@ -376,10 +376,32 @@ function App() {
                                 )}
 
                                 {transfer.connectionError && (
-                                    <div className="card-glass" style={{ padding: 'var(--space-md)', background: 'rgba(239, 68, 68, 0.1)' }}>
-                                        <p style={{ color: 'var(--error)', display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+                                    <div className="card-glass" style={{ padding: 'var(--space-lg)', background: 'rgba(239, 68, 68, 0.1)' }}>
+                                        <p style={{ color: 'var(--error)', display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', marginBottom: 'var(--space-md)' }}>
                                             <X size={20} /> {transfer.connectionError}
                                         </p>
+                                        <div style={{
+                                            fontSize: 'var(--font-size-sm)',
+                                            color: 'var(--text-secondary)',
+                                            background: 'var(--bg-tertiary)',
+                                            padding: 'var(--space-md)',
+                                            borderRadius: 'var(--radius-md)',
+                                        }}>
+                                            <p style={{ fontWeight: 600, marginBottom: 'var(--space-sm)' }}>💡 Troubleshooting:</p>
+                                            <ul style={{ paddingLeft: 'var(--space-md)', margin: 0 }}>
+                                                <li>Both devices must be on the <strong>same WiFi network</strong></li>
+                                                <li>If using hotspot, <strong>AP isolation may block P2P</strong></li>
+                                                <li>Make sure the sender's page is still open</li>
+                                                <li>Try refreshing both pages and reconnecting</li>
+                                            </ul>
+                                        </div>
+                                        <button
+                                            className="btn btn-secondary w-full"
+                                            style={{ marginTop: 'var(--space-md)' }}
+                                            onClick={handleNewTransfer}
+                                        >
+                                            Try Again
+                                        </button>
                                     </div>
                                 )}
 
@@ -436,10 +458,40 @@ function App() {
 
                         {transferMode === 'receiving' && !transfer.isConnected && transfer.progress.status === 'pending' && (
                             <div className="card-glass text-center" style={{ padding: 'var(--space-xl)' }}>
-                                <LoadingSpinner size={48} />
-                                <p style={{ fontWeight: 600, marginTop: 'var(--space-md)' }}>Connecting to {peerIdInput}...</p>
-                                {transfer.connectionError && (
-                                    <p style={{ color: 'var(--error)', marginTop: 'var(--space-md)' }}>{transfer.connectionError}</p>
+                                {!transfer.connectionError ? (
+                                    <>
+                                        <LoadingSpinner size={48} />
+                                        <p style={{ fontWeight: 600, marginTop: 'var(--space-md)' }}>Connecting to {peerIdInput}...</p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <X size={48} style={{ color: 'var(--error)', marginBottom: 'var(--space-md)' }} />
+                                        <p style={{ color: 'var(--error)', fontWeight: 600 }}>{transfer.connectionError}</p>
+                                        <div style={{
+                                            fontSize: 'var(--font-size-sm)',
+                                            color: 'var(--text-secondary)',
+                                            background: 'var(--bg-tertiary)',
+                                            padding: 'var(--space-md)',
+                                            borderRadius: 'var(--radius-md)',
+                                            marginTop: 'var(--space-md)',
+                                            textAlign: 'left',
+                                        }}>
+                                            <p style={{ fontWeight: 600, marginBottom: 'var(--space-sm)' }}>💡 Troubleshooting:</p>
+                                            <ul style={{ paddingLeft: 'var(--space-md)', margin: 0 }}>
+                                                <li>Both devices must be on the <strong>same WiFi network</strong></li>
+                                                <li>If using hotspot, P2P may be blocked by AP isolation</li>
+                                                <li>Check the connection code is correct</li>
+                                                <li>Make sure the sender's page is still open</li>
+                                            </ul>
+                                        </div>
+                                        <button
+                                            className="btn btn-primary w-full"
+                                            style={{ marginTop: 'var(--space-md)' }}
+                                            onClick={handleNewTransfer}
+                                        >
+                                            Try Again
+                                        </button>
+                                    </>
                                 )}
                             </div>
                         )}
