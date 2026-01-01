@@ -42,6 +42,18 @@ export interface ConnectionInfo {
 
 export type TabType = 'send' | 'receive' | 'history';
 
+// Connection mode - P2P (WebRTC), Local (HTTP/BroadcastChannel), or TURN-assisted
+export type ConnectionMode = 'auto' | 'p2p' | 'local' | 'turn';
+
+// Local session for HTTP-based transfers
+export interface LocalSession {
+    token: string;
+    isHost: boolean;
+    hostUrl: string;
+    connectedPeer: string | null;
+    expiresAt?: number;
+}
+
 export interface PeerMessage {
     type: 'file-info' | 'chunk' | 'done' | 'error' | 'ack';
     data?: unknown;
@@ -61,3 +73,4 @@ export interface FileMetadata {
     type: string;
     totalChunks: number;
 }
+

@@ -8,6 +8,36 @@ const CHUNK_SIZE = 256 * 1024;
 // Speed calculation with moving average
 const SPEED_SAMPLES = 5;
 
+// Connection timeout in milliseconds
+const CONNECTION_TIMEOUT = 15000;
+
+// ICE servers for NAT traversal - includes STUN and public TURN servers
+const ICE_CONFIG = {
+    iceServers: [
+        // Google STUN servers
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        // Open Relay TURN servers (free, community-supported)
+        {
+            urls: 'turn:openrelay.metered.ca:80',
+            username: 'openrelayproject',
+            credential: 'openrelayproject',
+        },
+        {
+            urls: 'turn:openrelay.metered.ca:443',
+            username: 'openrelayproject',
+            credential: 'openrelayproject',
+        },
+        {
+            urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+            username: 'openrelayproject',
+            credential: 'openrelayproject',
+        },
+    ],
+    iceCandidatePoolSize: 10,
+};
+
 interface UseTransferOptions {
     onFileReceived?: (file: Blob, metadata: FileMetadata, peerName: string) => void;
     onError?: (error: string) => void;
@@ -260,10 +290,23 @@ export function useTransfer(options: UseTransferOptions = {}) {
             const peerId = generatePeerId();
             console.log('Creating peer with ID:', peerId);
 
-            const peer = new Peer(peerId, { debug: 1 });
+            const peer = new Peer(peerId, {
+                debug: 1,
+                config: ICE_CONFIG,
+            });
             peerRef.current = peer;
 
+            // Timeout for peer creation
+            const timeout = setTimeout(() => {
+                if (!peerRef.current?.open) {
+                    setConnectionError('Connection timeout - try Local Mode if on hotspot');
+                    cleanup();
+                    reject(new Error('Peer creation timeout'));
+                }
+            }, CONNECTION_TIMEOUT);
+
             peer.on('open', (id) => {
+                clearTimeout(timeout);
                 console.log('Peer opened with ID:', id);
                 setMyPeerId(id);
                 setIsPeerReady(true);
@@ -276,8 +319,14 @@ export function useTransfer(options: UseTransferOptions = {}) {
             });
 
             peer.on('error', (err) => {
+                clearTimeout(timeout);
                 console.error('Peer error:', err);
-                setConnectionError('Peer error: ' + err.message);
+                const errorMsg = err.type === 'network'
+                    ? 'Network error - check your connection or try Local Mode'
+                    : err.type === 'peer-unavailable'
+                        ? 'Peer not found - check the code and try again'
+                        : 'Peer error: ' + err.message;
+                setConnectionError(errorMsg);
                 reject(err);
             });
         });
@@ -291,8 +340,18 @@ export function useTransfer(options: UseTransferOptions = {}) {
             const myId = generatePeerId();
             console.log('Creating peer to connect, my ID:', myId);
 
-            const peer = new Peer(myId, { debug: 1 });
+            const peer = new Peer(myId, {
+                debug: 1,
+                config: ICE_CONFIG,
+            });
             peerRef.current = peer;
+
+            // Timeout for connection
+            const timeout = setTimeout(() => {
+                setConnectionError('Connection timeout - the sender may be offline or try Local Mode');
+                cleanup();
+                reject(new Error('Connection timeout'));
+            }, CONNECTION_TIMEOUT);
 
             peer.on('open', () => {
                 console.log('My peer opened, connecting to:', peerId);
@@ -306,19 +365,27 @@ export function useTransfer(options: UseTransferOptions = {}) {
                 setupConnection(conn);
 
                 conn.on('open', () => {
+                    clearTimeout(timeout);
                     console.log('Connected to peer:', peerId);
                     resolve();
                 });
 
                 conn.on('error', (err) => {
+                    clearTimeout(timeout);
                     console.error('Connection error:', err);
                     reject(err);
                 });
             });
 
             peer.on('error', (err) => {
+                clearTimeout(timeout);
                 console.error('Peer error:', err);
-                setConnectionError('Failed to connect: ' + err.message);
+                const errorMsg = err.type === 'peer-unavailable'
+                    ? `Peer "${peerId}" not found - check the code`
+                    : err.type === 'network'
+                        ? 'Network error - try Local Mode if on hotspot'
+                        : 'Failed to connect: ' + err.message;
+                setConnectionError(errorMsg);
                 reject(err);
             });
         });
