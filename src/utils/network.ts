@@ -1,7 +1,5 @@
-/**
- * Network utilities for HyperDrop
- * Helps with IP detection, connectivity checks, and session management
- */
+// Network utilities
+
 
 // Generate a secure session token
 export function generateSessionToken(): string {

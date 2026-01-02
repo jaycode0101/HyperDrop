@@ -1,7 +1,5 @@
-/**
- * Encryption utilities using Web Crypto API
- * AES-256-GCM for secure file encryption
- */
+// Encryption utilities using Web Crypto API
+
 
 // Generate a key from device ID (deterministic)
 export async function deriveKey(deviceId: string): Promise<CryptoKey> {

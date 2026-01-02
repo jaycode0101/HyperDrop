@@ -1,14 +1,8 @@
 /**
- * Local Transfer Hook - HTTP-based file transfer for hotspot scenarios
- * 
- * When WebRTC fails (common on mobile hotspots due to AP isolation),
- * this provides a fallback using HTTP polling.
- * 
- * How it works:
- * 1. Host generates a session URL with token
- * 2. Joiner connects to the URL
- * 3. Files are transferred via HTTP POST/GET with progress tracking
+ * Local Transfer Hook - HTTP-based file transfer fallback
+ * Uses BroadcastChannel for same-origin transfers (max 5MB)
  */
+
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { generateSessionToken } from '../utils/network';

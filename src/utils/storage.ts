@@ -1,7 +1,5 @@
-/**
- * IndexedDB storage for encrypted files
- * Files are stored encrypted and invisible in DevTools
- */
+// IndexedDB storage for encrypted files
+
 
 import { deriveKey, encryptBlob, decryptBlob } from './crypto';
 

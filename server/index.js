@@ -1,16 +1,6 @@
-/**
- * HyperDrop Signaling Server
- * 
- * A simple PeerJS signaling server that can be self-hosted.
- * Deploy to Railway, Render, Fly.io, or any Node.js host.
- * 
- * Usage:
- *   npm install
- *   npm start
- * 
- * Environment variables:
- *   PORT - Server port (default: 9000)
- */
+// HyperDrop Signaling Server
+// PeerJS server for WebRTC connections
+
 
 import express from 'express';
 import cors from 'cors';

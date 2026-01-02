@@ -149,9 +149,8 @@ export function useTransfer(options: UseTransferOptions = {}) {
 
     // Handle incoming data - BINARY for speed
     const handleIncomingData = useCallback((data: unknown) => {
-        // Binary chunk data - handle both ArrayBuffer and Uint8Array
-        // CRITICAL: We must COPY the data, not just slice/view it!
-        // PeerJS may reuse internal buffers, corrupting our data if we don't copy.
+        // Handle both ArrayBuffer and Uint8Array
+        // Copy the data to avoid reference issues with PeerJS internal buffers
         let buffer: ArrayBuffer | null = null;
 
         if (data instanceof ArrayBuffer) {
@@ -173,7 +172,7 @@ export function useTransfer(options: UseTransferOptions = {}) {
         if (buffer) {
             const view = new DataView(buffer);
             const chunkIndex = view.getUint32(0, true); // Little endian
-            // IMPORTANT: Create a proper copy of chunk data
+            // Create a copy of chunk data
             const chunkDataView = new Uint8Array(buffer, 4);
             const chunkData = new Uint8Array(chunkDataView.length);
             chunkData.set(chunkDataView);
