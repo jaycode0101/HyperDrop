@@ -151,22 +151,6 @@ HyperDrop uses **WebRTC** to create direct peer-to-peer connections:
 - HyperDrop includes free public TURN servers
 
 
-
-## 🔧 Configuration
-
-Copy `.env.example` to `.env` and configure:
-
-```env
-# Optional: Self-hosted signaling server
-VITE_SIGNALING_SERVER=wss://your-signaling-server.railway.app
-
-# Optional: Custom TURN server (for production)
-VITE_TURN_SERVER=turn:your-turn-server.com:443
-VITE_TURN_USERNAME=username
-VITE_TURN_CREDENTIAL=credential
-```
-
-
 ## 🐛 Troubleshooting
 
 ### "Connection timeout" or "ICE failed"
