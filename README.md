@@ -250,30 +250,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📂 GitHub Repository
-
-**Repository**: [https://github.com/jaycode0101/HyperDrop](https://github.com/jaycode0101/HyperDrop)
-
-### Pushing Your Code to GitHub
-
-If you've made changes and want to push them:
-
-```bash
-# Initialize git (if not already done)
-git init
-
-# Add all files
-git add .
-
-# Commit your changes
-git commit -m "Initial commit" 
-
-# Add remote repository
-git remote add origin https://github.com/jaycode0101/HyperDrop.git
-
-# Push to GitHub
-git push -u origin main
-```
 
 ### Download Without Git
 
