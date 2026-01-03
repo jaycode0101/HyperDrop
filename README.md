@@ -36,16 +36,7 @@ HyperDrop is a **modern web application** for transferring files directly betwee
 
 ## 📥 Installation
 
-### 🌐 Use Online (Recommended)
-**Just open in your browser:** [https://hyperdrop.app](https://hyperdrop.app)
 
-Click the install button in your browser to add to desktop/home screen!
-
-### 💻 Desktop Installation
-**One command:**
-```bash
-curl -fsSL https://raw.githubusercontent.com/jaycode0101/HyperDrop/main/install.sh | sh
-```
 
 ### 📱 Mobile Installation (Android/iOS)
 1. Open [https://hyperdrop.app](https://hyperdrop.app) in your browser
@@ -159,52 +150,7 @@ HyperDrop uses **WebRTC** to create direct peer-to-peer connections:
 - Slightly slower than direct P2P
 - HyperDrop includes free public TURN servers
 
-## 🚢 Deployment
 
-### Static Site (Vercel/Netlify)
-
-```bash
-# Build for production
-npm run build
-
-# The 'dist' folder contains the static site
-```
-
-**Vercel:**
-1. Connect your GitHub repo to Vercel
-2. Framework: Vite
-3. Build command: `npm run build`
-4. Output directory: `dist`
-
-**Netlify:**
-```toml
-# netlify.toml
-[build]
-  command = "npm run build"
-  publish = "dist"
-```
-
-### Signaling Server (Railway)
-
-For better reliability, deploy your own signaling server:
-
-```bash
-cd server
-npm install
-npm start
-```
-
-**Deploy to Railway:**
-1. Create a new project on [Railway](https://railway.app)
-2. Connect the `server` folder
-3. Railway will auto-detect the Dockerfile
-4. Set environment variable: `PORT=9000`
-
-Then update your client to use the custom server:
-```env
-# .env
-VITE_SIGNALING_SERVER=https://your-server.railway.app/peerjs
-```
 
 ## 🔧 Configuration
 
@@ -220,14 +166,6 @@ VITE_TURN_USERNAME=username
 VITE_TURN_CREDENTIAL=credential
 ```
 
-### TURN Server Options
-
-| Option | Cost | Reliability | Setup |
-|--------|------|-------------|-------|
-| Default (OpenRelay) | Free | Low | None |
-| [Metered](https://metered.ca) | ~$0.40/GB | High | 5 min |
-| [Xirsys](https://xirsys.com) | Limited free | Medium | 10 min |
-| Self-hosted coturn | ~$5/mo VPS | High | 30 min |
 
 ## 🐛 Troubleshooting
 
